@@ -516,7 +516,7 @@ static void cleanup_timers(struct list_head *head,
 void posix_cpu_timers_exit(struct task_struct *tsk)
 {
 	cleanup_timers(tsk->cpu_timers,
-		       tsk->utime, tsk->stime, tsk->se.sum_exec_runtime);
+		       tsk->utime, tsk->stime, tsk_seruntime(tsk));
 
 }
 void posix_cpu_timers_exit_group(struct task_struct *tsk)
@@ -525,8 +525,8 @@ void posix_cpu_timers_exit_group(struct task_struct *tsk)
 
 	cleanup_timers(tsk->signal->cpu_timers,
 		       cputime_add(tsk->utime, sig->utime),
-		       cputime_add(tsk->stime, sig->stime), 
-tsk_seruntime(tsk) + sig->sum_sched_runtime);
+		       cputime_add(tsk->stime, sig->stime),
+		       tsk_seruntime(tsk) + sig->sum_sched_runtime);
 }
 
 static void clear_dead_task(struct k_itimer *timer, union cpu_time_count now)
@@ -1035,7 +1035,7 @@ static void check_thread_timers(struct task_struct *tsk,
 		unsigned long *soft = &sig->rlim[RLIMIT_RTTIME].rlim_cur;
 
 		if (hard != RLIM_INFINITY &&
-		    tsk->rt.timeout > DIV_ROUND_UP(hard, USEC_PER_SEC/HZ)) {
+		    tsk_rttimeout(tsk) > DIV_ROUND_UP(hard, USEC_PER_SEC/HZ)) {
 			/*
 			 * At the hard limit, we just die.
 			 * No need to calculate anything else now.
